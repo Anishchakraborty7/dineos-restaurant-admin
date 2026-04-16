@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Orders — DineOS Restaurant</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .order-card { background:var(--surface); border:1px solid var(--border); border-radius:14px; margin-bottom:16px; overflow:hidden; transition:box-shadow 0.2s; }
+    .order-card:hover { box-shadow:0 4px 20px rgba(0,0,0,0.12); }
+    .order-card-header { display:flex; justify-content:space-between; align-items:center; padding:14px 20px; background:var(--surface-2); border-bottom:1px solid var(--border); }
+    .order-card-body { padding:16px 20px; }
+    .order-items-list { margin:12px 0; }
+    .order-footer { display:flex; justify-content:space-between; align-items:center; margin-top:14px; padding-top:14px; border-top:1px solid var(--border); }
+  </style>
+</head>
+<body>
+<div class="app-layout">
+  <aside class="sidebar">
+    <div class="sidebar-header"><div class="sidebar-brand"><div class="brand-icon">🍽️</div><div class="brand-name" id="sidebarRestaurantName">Restaurant</div></div></div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Manage</div>
+      <a href="dashboard.html"    class="nav-item"><span class="nav-icon">📊</span> Dashboard</a>
+      <a href="orders.html"       class="nav-item active"><span class="nav-icon">📦</span> Orders</a>
+      <a href="menu.html"         class="nav-item"><span class="nav-icon">📋</span> Menu</a>
+      <a href="reservations.html" class="nav-item"><span class="nav-icon">📅</span> Reservations</a>
+      <a href="tables.html"       class="nav-item"><span class="nav-icon">🪑</span> Tables</a>
+      <a href="customers.html"    class="nav-item"><span class="nav-icon">👥</span> Customers</a>
+      <div class="nav-section-label" style="margin-top:8px">Account</div>
+      <a href="settings.html"     class="nav-item"><span class="nav-icon">⚙️</span> Settings</a>
+      <a href="#" class="nav-item" id="logoutBtn"><span class="nav-icon">🚪</span> Sign Out</a>
+    </nav>
+    <div class="sidebar-footer"><div class="sidebar-user"><div class="user-avatar" id="sidebarAvatar">R</div><div><div class="user-name" id="sidebarName">Admin</div><div class="user-role">Restaurant Admin</div></div></div></div>
+  </aside>
+  <div class="main-content">
+    <header class="main-header">
+      <div class="header-title">
+        <h1>Orders</h1>
+        <span id="orderCount" style="background:var(--surface-2);padding:3px 10px;border-radius:20px;font-size:13px"></span>
+      </div>
+      <div class="header-actions">
+        <button id="refreshBtn" class="btn btn-secondary btn-sm">🔄 Refresh</button>
+      </div>
+    </header>
+    <main class="page-content animate-fadeInUp">
+      <div class="card" style="margin-bottom:20px;padding:16px 20px">
+        <div style="display:flex;gap:14px;flex-wrap:wrap">
+          <div class="form-group" style="margin:0;flex:1;min-width:130px">
+            <label>Status</label>
+            <select id="filterStatus">
+              <option value="">All Statuses</option>
+              <option value="pending">Pending</option>
+              <option value="confirmed">Confirmed</option>
+              <option value="preparing">Preparing</option>
+              <option value="ready">Ready</option>
+              <option value="out_for_delivery">Out for Delivery</option>
+              <option value="delivered">Delivered</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+          </div>
+          <div class="form-group" style="margin:0;flex:1;min-width:130px">
+            <label>Type</label>
+            <select id="filterType">
+              <option value="">All Types</option>
+              <option value="delivery">Delivery</option>
+              <option value="dine_in">Dine In</option>
+              <option value="takeaway">Takeaway</option>
+            </select>
+          </div>
+          <div class="form-group" style="margin:0;flex:1;min-width:150px">
+            <label>Date</label>
+            <input type="date" id="filterDate">
+          </div>
+        </div>
+      </div>
+      <div id="ordersContainer"><div style="text-align:center;padding:64px;color:var(--text-muted)">Loading...</div></div>
+      <div id="pagination"></div>
+    </main>
+  </div>
+</div>
+<script src="js/config.js"></script>
+<script src="js/orders.js"></script>
+</body>
+</html>

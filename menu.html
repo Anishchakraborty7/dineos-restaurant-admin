@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Menu — DineOS Restaurant</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .menu-layout { display:grid; grid-template-columns:280px 1fr; gap:24px; }
+    .menu-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:18px; }
+    @media(max-width:900px){.menu-layout{grid-template-columns:1fr}.menu-grid{grid-template-columns:1fr 1fr}}
+    @media(max-width:600px){.menu-grid{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+<div class="app-layout">
+  <aside class="sidebar">
+    <div class="sidebar-header"><div class="sidebar-brand"><div class="brand-icon">🍽️</div><div class="brand-name" id="sidebarRestaurantName">Restaurant</div></div></div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Manage</div>
+      <a href="dashboard.html"    class="nav-item"><span class="nav-icon">📊</span> Dashboard</a>
+      <a href="orders.html"       class="nav-item"><span class="nav-icon">📦</span> Orders</a>
+      <a href="menu.html"         class="nav-item active"><span class="nav-icon">📋</span> Menu</a>
+      <a href="reservations.html" class="nav-item"><span class="nav-icon">📅</span> Reservations</a>
+      <a href="tables.html"       class="nav-item"><span class="nav-icon">🪑</span> Tables</a>
+      <a href="customers.html"    class="nav-item"><span class="nav-icon">👥</span> Customers</a>
+      <div class="nav-section-label" style="margin-top:8px">Account</div>
+      <a href="settings.html"     class="nav-item"><span class="nav-icon">⚙️</span> Settings</a>
+      <a href="#" class="nav-item" id="logoutBtn"><span class="nav-icon">🚪</span> Sign Out</a>
+    </nav>
+    <div class="sidebar-footer"><div class="sidebar-user"><div class="user-avatar" id="sidebarAvatar">R</div><div><div class="user-name" id="sidebarName">Admin</div><div class="user-role">Restaurant Admin</div></div></div></div>
+  </aside>
+  <div class="main-content">
+    <header class="main-header">
+      <div class="header-title"><h1>Menu Management</h1></div>
+      <div class="header-actions">
+        <button id="addCatBtn" class="btn btn-secondary btn-sm">+ Category</button>
+        <button id="addItemBtn" class="btn btn-primary btn-sm">+ Add Item</button>
+      </div>
+    </header>
+    <main class="page-content animate-fadeInUp">
+      <!-- Filters -->
+      <div class="card" style="margin-bottom:20px;padding:14px 20px">
+        <div style="display:flex;gap:12px;flex-wrap:wrap">
+          <input type="search" id="searchItems" placeholder="Search items..." style="flex:1;min-width:180px;padding:8px 12px;border:1px solid var(--border);border-radius:8px;background:var(--surface-2);color:var(--text-primary)">
+          <select id="filterCat" style="padding:8px 12px;border:1px solid var(--border);border-radius:8px;background:var(--surface-2);color:var(--text-primary)"><option value="">All Categories</option></select>
+          <select id="filterVeg" style="padding:8px 12px;border:1px solid var(--border);border-radius:8px;background:var(--surface-2);color:var(--text-primary)">
+            <option value="">All Types</option>
+            <option value="veg">Veg Only</option>
+            <option value="nonveg">Non-Veg Only</option>
+          </select>
+        </div>
+      </div>
+      <div class="menu-layout">
+        <!-- Categories Sidebar -->
+        <div>
+          <div style="font-size:13px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:14px">Categories</div>
+          <div id="categoriesList"><p style="color:var(--text-muted);font-size:13px">Loading...</p></div>
+        </div>
+        <!-- Items Grid -->
+        <div>
+          <div style="font-size:13px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:14px">Menu Items</div>
+          <div class="menu-grid" id="menuGrid"><div style="grid-column:1/-1;text-align:center;padding:48px;color:var(--text-muted)">Loading...</div></div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- Item Modal -->
+<div class="modal-overlay" id="itemModal" onclick="if(event.target===this) closeItemModal()">
+  <div class="modal" style="max-width:500px">
+    <div class="modal-header"><div class="modal-title" id="itemModalTitle">Add Menu Item</div><button class="modal-close" onclick="closeItemModal()">✕</button></div>
+    <div class="modal-body">
+      <form id="itemForm">
+        <div class="form-group"><label>Item Name *</label><input type="text" id="itemName" placeholder="e.g. Paneer Butter Masala"></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+          <div class="form-group"><label>Price (₹) *</label><input type="number" id="itemPrice" placeholder="150" min="0" step="0.50"></div>
+          <div class="form-group"><label>Category</label><select id="itemCategory"></select></div>
+        </div>
+        <div class="form-group"><label>Description</label><textarea id="itemDesc" rows="2" placeholder="Describe this dish..."></textarea></div>
+        <div class="form-group"><label>Image URL</label><input type="url" id="itemImage" placeholder="https://example.com/image.jpg"></div>
+        <div style="display:flex;gap:24px;margin-top:8px">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px"><input type="checkbox" id="itemVeg" checked style="width:16px;height:16px"> Vegetarian</label>
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px"><input type="checkbox" id="itemFeatured" style="width:16px;height:16px"> Featured</label>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeItemModal()">Cancel</button>
+      <button class="btn btn-primary" id="saveItemBtn">Save Item</button>
+    </div>
+  </div>
+</div>
+
+<!-- Category Modal -->
+<div class="modal-overlay" id="catModal" onclick="if(event.target===this) closeCatModal()">
+  <div class="modal" style="max-width:400px">
+    <div class="modal-header"><div class="modal-title" id="catModalTitle">Add Category</div><button class="modal-close" onclick="closeCatModal()">✕</button></div>
+    <div class="modal-body">
+      <form id="catForm">
+        <div class="form-group"><label>Category Name *</label><input type="text" id="catName" placeholder="e.g. Starters, Mains, Desserts"></div>
+        <div class="form-group"><label>Description</label><textarea id="catDesc" rows="2" placeholder="Optional description"></textarea></div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeCatModal()">Cancel</button>
+      <button class="btn btn-primary" id="saveCatBtn">Save Category</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/config.js"></script>
+<script src="js/menu.js"></script>
+</body>
+</html>

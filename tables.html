@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tables — DineOS Restaurant</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .tables-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:16px}
+    .table-tile{background:var(--surface);border:2px solid var(--border);border-radius:14px;padding:20px;text-align:center;cursor:pointer;transition:0.2s;position:relative}
+    .table-tile:hover{border-color:var(--primary);transform:translateY(-2px)}
+    .table-tile.occupied{border-color:#ef4444;background:rgba(239,68,68,0.04)}
+    .table-tile.reserved{border-color:#f59e0b;background:rgba(245,158,11,0.04)}
+    .table-tile.available{border-color:#10b981;background:rgba(16,185,129,0.04)}
+    .table-num{font-size:24px;font-weight:800;margin-bottom:4px}
+    .table-cap{font-size:12px;color:var(--text-muted)}
+    .table-status-dot{width:10px;height:10px;border-radius:50%;margin:8px auto}
+    .dot-available{background:#10b981}
+    .dot-occupied{background:#ef4444}
+    .dot-reserved{background:#f59e0b}
+    .dot-maintenance{background:#6b7280}
+  </style>
+</head>
+<body>
+<div class="app-layout">
+  <aside class="sidebar">
+    <div class="sidebar-header"><div class="sidebar-brand"><div class="brand-icon">🍽️</div><div class="brand-name" id="sidebarRestaurantName">Restaurant</div></div></div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Manage</div>
+      <a href="dashboard.html"    class="nav-item"><span class="nav-icon">📊</span> Dashboard</a>
+      <a href="orders.html"       class="nav-item"><span class="nav-icon">📦</span> Orders</a>
+      <a href="menu.html"         class="nav-item"><span class="nav-icon">📋</span> Menu</a>
+      <a href="reservations.html" class="nav-item"><span class="nav-icon">📅</span> Reservations</a>
+      <a href="tables.html"       class="nav-item active"><span class="nav-icon">🪑</span> Tables</a>
+      <a href="customers.html"    class="nav-item"><span class="nav-icon">👥</span> Customers</a>
+      <div class="nav-section-label" style="margin-top:8px">Account</div>
+      <a href="settings.html"     class="nav-item"><span class="nav-icon">⚙️</span> Settings</a>
+      <a href="#" class="nav-item" id="logoutBtn"><span class="nav-icon">🚪</span> Sign Out</a>
+    </nav>
+    <div class="sidebar-footer"><div class="sidebar-user"><div class="user-avatar" id="sidebarAvatar">R</div><div><div class="user-name" id="sidebarName">Admin</div><div class="user-role">Restaurant Admin</div></div></div></div>
+  </aside>
+  <div class="main-content">
+    <header class="main-header">
+      <div class="header-title"><h1>Tables</h1><p style="font-size:13px;color:var(--text-muted)">Visual floor plan</p></div>
+      <div class="header-actions">
+        <div style="display:flex;gap:10px;align-items:center;font-size:12px">
+          <span><span class="dot-available" style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#10b981;margin-right:4px"></span>Available</span>
+          <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#ef4444;margin-right:4px"></span>Occupied</span>
+          <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#f59e0b;margin-right:4px"></span>Reserved</span>
+        </div>
+        <button id="addTableBtn" class="btn btn-primary btn-sm">+ Add Table</button>
+      </div>
+    </header>
+    <main class="page-content animate-fadeInUp">
+      <div class="tables-grid" id="tablesGrid"><div style="grid-column:1/-1;text-align:center;padding:64px;color:var(--text-muted)">Loading...</div></div>
+    </main>
+  </div>
+</div>
+
+<!-- Add/Edit Table Modal -->
+<div class="modal-overlay" id="tableModal" onclick="if(event.target===this)closeTableModal()">
+  <div class="modal" style="max-width:380px">
+    <div class="modal-header"><div class="modal-title" id="tableModalTitle">Add Table</div><button class="modal-close" onclick="closeTableModal()">✕</button></div>
+    <div class="modal-body">
+      <div class="form-group"><label>Table Number / Name *</label><input type="text" id="tableNumber" placeholder="e.g. T1, Table 1, VIP-1"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group"><label>Capacity (seats)</label><input type="number" id="tableCapacity" value="4" min="1" max="50"></div>
+        <div class="form-group"><label>Location</label><input type="text" id="tableLocation" placeholder="Indoor, Rooftop..."></div>
+      </div>
+      <div class="form-group" id="statusGroup" style="display:none">
+        <label>Status</label>
+        <select id="tableStatus">
+          <option value="available">Available</option>
+          <option value="occupied">Occupied</option>
+          <option value="reserved">Reserved</option>
+          <option value="maintenance">Maintenance</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button id="deleteTableBtn" class="btn btn-danger" style="display:none" onclick="deleteTable()">Delete</button>
+      <button class="btn btn-secondary" onclick="closeTableModal()">Cancel</button>
+      <button class="btn btn-primary" id="saveTableBtn">Save Table</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/config.js"></script>
+<script>
+let tables=[], editTableId=null;
+document.addEventListener('DOMContentLoaded',()=>{
+  auth.requireAuth();
+  loadTables();
+  document.getElementById('addTableBtn').addEventListener('click',()=>openTableModal());
+  document.getElementById('logoutBtn').addEventListener('click',e=>{e.preventDefault();if(confirm('Sign out?'))auth.logout();});
+  document.getElementById('saveTableBtn').addEventListener('click', saveTable);
+});
+
+async function loadTables(){
+  try{
+    const res=await api.get('/admin/tables');
+    tables=res.data;
+    renderTables();
+  }catch(err){toast.error('Failed to load tables');}
+}
+
+const dotColors={available:'#10b981',occupied:'#ef4444',reserved:'#f59e0b',maintenance:'#6b7280'};
+
+function renderTables(){
+  const el=document.getElementById('tablesGrid');
+  if(!tables?.length){
+    el.innerHTML=`<div style="grid-column:1/-1;text-align:center;padding:64px">
+      <div style="font-size:48px;margin-bottom:16px">🪑</div>
+      <p style="color:var(--text-muted)">No tables yet. Add your first table!</p>
+    </div>`;return;
+  }
+  el.innerHTML=tables.map(t=>`
+    <div class="table-tile ${t.status}" onclick="openTableModal('${t.table_id}')">
+      <div style="font-size:28px;margin-bottom:8px">🪑</div>
+      <div class="table-num">${t.table_number}</div>
+      <div class="table-cap">${t.capacity} seats${t.location?` · ${t.location}`:''}</div>
+      <div class="table-status-dot" style="background:${dotColors[t.status]||'#6b7280'}"></div>
+      <div style="font-size:11px;font-weight:600;color:${dotColors[t.status]||'#6b7280'};text-transform:uppercase">${t.status}</div>
+      ${t.today_reservations>0?`<div style="font-size:11px;color:#f59e0b;margin-top:4px">${t.today_reservations} booking today</div>`:''}
+    </div>`).join('');
+}
+
+function openTableModal(id=null){
+  editTableId=id;
+  document.getElementById('tableModalTitle').textContent=id?'Edit Table':'Add Table';
+  document.getElementById('deleteTableBtn').style.display=id?'block':'none';
+  document.getElementById('statusGroup').style.display=id?'block':'none';
+  if(!id){ document.getElementById('tableNumber').value=''; document.getElementById('tableCapacity').value=4; document.getElementById('tableLocation').value=''; }
+  else{
+    const t=tables.find(t=>t.table_id===id); if(!t) return;
+    document.getElementById('tableNumber').value=t.table_number;
+    document.getElementById('tableCapacity').value=t.capacity;
+    document.getElementById('tableLocation').value=t.location||'';
+    document.getElementById('tableStatus').value=t.status;
+  }
+  document.getElementById('tableModal').classList.add('active');
+}
+
+function closeTableModal(){document.getElementById('tableModal').classList.remove('active');editTableId=null;}
+
+async function saveTable(){
+  const payload={table_number:document.getElementById('tableNumber').value.trim(),capacity:parseInt(document.getElementById('tableCapacity').value)||4,location:document.getElementById('tableLocation').value.trim()||null};
+  if(editTableId)payload.status=document.getElementById('tableStatus').value;
+  if(!payload.table_number){toast.error('Table number is required.');return;}
+  try{
+    if(editTableId) await api.patch(`/admin/tables/${editTableId}`,payload);
+    else            await api.post('/admin/tables',payload);
+    toast.success(editTableId?'Table updated!':'Table added!');
+    closeTableModal();
+    loadTables();
+  }catch(err){toast.error(err.message);}
+}
+
+async function deleteTable(){
+  if(!confirm('Delete this table?'))return;
+  try{await api.del(`/admin/tables/${editTableId}`);toast.success('Table deleted.');closeTableModal();loadTables();}
+  catch(err){toast.error(err.message);}
+}
+</script>
+</body>
+</html>

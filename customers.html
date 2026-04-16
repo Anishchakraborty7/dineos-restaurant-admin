@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Customers — DineOS Restaurant</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="app-layout">
+  <aside class="sidebar">
+    <div class="sidebar-header"><div class="sidebar-brand"><div class="brand-icon">🍽️</div><div class="brand-name" id="sidebarRestaurantName">Restaurant</div></div></div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Manage</div>
+      <a href="dashboard.html"    class="nav-item"><span class="nav-icon">📊</span> Dashboard</a>
+      <a href="orders.html"       class="nav-item"><span class="nav-icon">📦</span> Orders</a>
+      <a href="menu.html"         class="nav-item"><span class="nav-icon">📋</span> Menu</a>
+      <a href="reservations.html" class="nav-item"><span class="nav-icon">📅</span> Reservations</a>
+      <a href="tables.html"       class="nav-item"><span class="nav-icon">🪑</span> Tables</a>
+      <a href="customers.html"    class="nav-item active"><span class="nav-icon">👥</span> Customers</a>
+      <div class="nav-section-label" style="margin-top:8px">Account</div>
+      <a href="settings.html"     class="nav-item"><span class="nav-icon">⚙️</span> Settings</a>
+      <a href="#" class="nav-item" id="logoutBtn"><span class="nav-icon">🚪</span> Sign Out</a>
+    </nav>
+    <div class="sidebar-footer"><div class="sidebar-user"><div class="user-avatar" id="sidebarAvatar">R</div><div><div class="user-name" id="sidebarName">Admin</div><div class="user-role">Restaurant Admin</div></div></div></div>
+  </aside>
+  <div class="main-content">
+    <header class="main-header">
+      <div class="header-title">
+        <h1>Customers</h1>
+        <span id="custCount" style="background:var(--surface-2);padding:3px 10px;border-radius:20px;font-size:13px"></span>
+      </div>
+    </header>
+    <main class="page-content animate-fadeInUp">
+      <div class="card" style="margin-bottom:20px;padding:14px 20px">
+        <input type="search" id="searchCustomers" placeholder="Search by name, phone or email..." style="width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:8px;background:var(--surface-2);color:var(--text-primary)">
+      </div>
+      <div class="card">
+        <div class="table-wrap" style="border:none;border-radius:0">
+          <table>
+            <thead>
+              <tr><th>Customer</th><th>Phone</th><th>Orders</th><th>Total Spent</th><th>Last Order</th><th>Since</th></tr>
+            </thead>
+            <tbody id="customersBody"><tr><td colspan="6" style="text-align:center;padding:48px;color:var(--text-muted)">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+      <div id="pagination"></div>
+    </main>
+  </div>
+</div>
+<script src="js/config.js"></script>
+<script>
+let currentPage=1, currentSearch='';
+document.addEventListener('DOMContentLoaded',()=>{
+  auth.requireAuth();
+  loadCustomers();
+  document.getElementById('searchCustomers').addEventListener('input',utils.debounce(()=>{currentPage=1;currentSearch=document.getElementById('searchCustomers').value;loadCustomers();},350));
+  document.getElementById('logoutBtn').addEventListener('click',e=>{e.preventDefault();if(confirm('Sign out?'))auth.logout();});
+});
+async function loadCustomers(){
+  const p=new URLSearchParams({page:currentPage,limit:25});
+  if(currentSearch)p.set('search',currentSearch);
+  try{
+    const res=await api.get(`/admin/customers?${p}`);
+    document.getElementById('custCount').textContent=`${res.pagination?.total||0} customers`;
+    const tbody=document.getElementById('customersBody');
+    if(!res.data?.length){tbody.innerHTML=`<tr><td colspan="6" style="text-align:center;padding:48px;color:var(--text-muted)">No customers yet</td></tr>`;return;}
+    tbody.innerHTML=res.data.map(c=>`
+      <tr>
+        <td><div style="font-weight:600">${c.name||'Guest'}</div><div style="font-size:12px;color:var(--text-muted)">${c.email||''}</div></td>
+        <td style="font-size:13px">${c.phone}</td>
+        <td><strong>${c.order_count||0}</strong></td>
+        <td style="font-weight:600;color:var(--primary)">${utils.currency(c.total_spent)}</td>
+        <td style="font-size:13px;color:var(--text-muted)">${c.last_order_at?utils.timeAgo(c.last_order_at):'—'}</td>
+        <td style="font-size:12px;color:var(--text-muted)">${utils.formatDate(c.created_at)}</td>
+      </tr>`).join('');
+    renderPagination(res.pagination);
+  }catch(err){toast.error('Failed to load customers');}
+}
+function renderPagination(p){
+  const el=document.getElementById('pagination');
+  if(!p||p.pages<=1){el.innerHTML='';return;}
+  el.innerHTML=`<div style="display:flex;gap:8px;justify-content:center;margin-top:24px">
+    <button class="btn btn-secondary btn-sm" onclick="changePage(${currentPage-1})" ${currentPage<=1?'disabled':''}>← Prev</button>
+    <span style="padding:6px 12px;font-size:13px;color:var(--text-secondary)">Page ${p.page} of ${p.pages}</span>
+    <button class="btn btn-secondary btn-sm" onclick="changePage(${currentPage+1})" ${currentPage>=p.pages?'disabled':''}>Next →</button>
+  </div>`;
+}
+function changePage(p){currentPage=p;loadCustomers();}
+</script>
+</body>
+</html>

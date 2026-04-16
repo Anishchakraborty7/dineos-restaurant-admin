@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reservations — DineOS Restaurant</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .res-badge{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;text-transform:uppercase}
+    .res-pending{background:rgba(245,158,11,.15);color:#f59e0b}
+    .res-confirmed{background:rgba(99,102,241,.15);color:#6366f1}
+    .res-cancelled{background:rgba(239,68,68,.15);color:#ef4444}
+    .res-completed{background:rgba(16,185,129,.15);color:#10b981}
+  </style>
+</head>
+<body>
+<div class="app-layout">
+  <aside class="sidebar">
+    <div class="sidebar-header"><div class="sidebar-brand"><div class="brand-icon">🍽️</div><div class="brand-name" id="sidebarRestaurantName">Restaurant</div></div></div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Manage</div>
+      <a href="dashboard.html"    class="nav-item"><span class="nav-icon">📊</span> Dashboard</a>
+      <a href="orders.html"       class="nav-item"><span class="nav-icon">📦</span> Orders</a>
+      <a href="menu.html"         class="nav-item"><span class="nav-icon">📋</span> Menu</a>
+      <a href="reservations.html" class="nav-item active"><span class="nav-icon">📅</span> Reservations</a>
+      <a href="tables.html"       class="nav-item"><span class="nav-icon">🪑</span> Tables</a>
+      <a href="customers.html"    class="nav-item"><span class="nav-icon">👥</span> Customers</a>
+      <div class="nav-section-label" style="margin-top:8px">Account</div>
+      <a href="settings.html"     class="nav-item"><span class="nav-icon">⚙️</span> Settings</a>
+      <a href="#" class="nav-item" id="logoutBtn"><span class="nav-icon">🚪</span> Sign Out</a>
+    </nav>
+    <div class="sidebar-footer"><div class="sidebar-user"><div class="user-avatar" id="sidebarAvatar">R</div><div><div class="user-name" id="sidebarName">Admin</div><div class="user-role">Restaurant Admin</div></div></div></div>
+  </aside>
+  <div class="main-content">
+    <header class="main-header">
+      <div class="header-title"><h1>Reservations</h1></div>
+      <div class="header-actions">
+        <div class="form-group" style="margin:0;display:flex;gap:10px;align-items:center">
+          <input type="date" id="filterDate" style="padding:7px 12px;border:1px solid var(--border);border-radius:8px;background:var(--surface-2);color:var(--text-primary)">
+          <select id="filterStatus" style="padding:7px 12px;border:1px solid var(--border);border-radius:8px;background:var(--surface-2);color:var(--text-primary)">
+            <option value="">All Status</option>
+            <option value="pending">Pending</option>
+            <option value="confirmed">Confirmed</option>
+            <option value="cancelled">Cancelled</option>
+            <option value="completed">Completed</option>
+          </select>
+        </div>
+      </div>
+    </header>
+    <main class="page-content animate-fadeInUp">
+      <div class="card">
+        <div class="table-wrap" style="border:none;border-radius:0">
+          <table>
+            <thead>
+              <tr><th>Guest</th><th>Date & Time</th><th>Party Size</th><th>Table</th><th>Occasion</th><th>Status</th><th>Actions</th></tr>
+            </thead>
+            <tbody id="reservationsBody"><tr><td colspan="7" style="text-align:center;padding:48px;color:var(--text-muted)">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+      <div id="pagination"></div>
+    </main>
+  </div>
+</div>
+<script src="js/config.js"></script>
+<script>
+let currentPage=1;
+document.addEventListener('DOMContentLoaded',()=>{
+  auth.requireAuth();
+  // Default to today
+  document.getElementById('filterDate').valueAsDate = new Date();
+  loadReservations();
+  document.getElementById('filterDate').addEventListener('change', ()=>{currentPage=1;loadReservations();});
+  document.getElementById('filterStatus').addEventListener('change', ()=>{currentPage=1;loadReservations();});
+  document.getElementById('logoutBtn').addEventListener('click',e=>{e.preventDefault();if(confirm('Sign out?'))auth.logout();});
+});
+
+async function loadReservations(){
+  const date=document.getElementById('filterDate').value;
+  const status=document.getElementById('filterStatus').value;
+  const p=new URLSearchParams({page:currentPage,limit:20});
+  if(date)p.set('date',date);
+  if(status)p.set('status',status);
+  try{
+    const res=await api.get(`/admin/reservations?${p}`);
+    renderTable(res.data);
+    renderPagination(res.pagination);
+  }catch(err){toast.error('Failed to load reservations');}
+}
+
+const statusClasses={pending:'res-pending',confirmed:'res-confirmed',cancelled:'res-cancelled',completed:'res-completed',no_show:'res-cancelled'};
+
+function renderTable(rows){
+  const tbody=document.getElementById('reservationsBody');
+  if(!rows?.length){tbody.innerHTML=`<tr><td colspan="7" style="text-align:center;padding:48px;color:var(--text-muted)">No reservations found</td></tr>`;return;}
+  tbody.innerHTML=rows.map(r=>`
+    <tr>
+      <td><div style="font-weight:600">${r.guest_name}</div><div style="font-size:12px;color:var(--text-muted)">${r.guest_phone}</div>${r.guest_email?`<div style="font-size:11px;color:var(--text-muted)">${r.guest_email}</div>`:''}</td>
+      <td><div>${new Date(r.reservation_date).toLocaleDateString('en-IN',{day:'2-digit',month:'short'})}</div><div style="font-size:12px;color:var(--text-muted)">${r.reservation_time?.slice(0,5)}</div></td>
+      <td style="font-weight:600">${r.party_size} guests</td>
+      <td>${r.table_number||'<span style="color:var(--text-muted);font-size:12px">Not assigned</span>'}</td>
+      <td style="font-size:13px">${r.occasion||'—'}</td>
+      <td><span class="res-badge ${statusClasses[r.status]||'res-pending'}">${r.status}</span></td>
+      <td>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          ${r.status==='pending'?`
+            <button onclick="updateRes('${r.reservation_id}','confirmed')" class="btn btn-sm" style="background:#6366f1;color:#fff;padding:4px 10px;font-size:11px">✓ Confirm</button>
+            <button onclick="updateRes('${r.reservation_id}','cancelled')" class="btn btn-sm" style="background:#ef4444;color:#fff;padding:4px 10px;font-size:11px">✕ Cancel</button>
+          `:''}
+          ${r.status==='confirmed'?`
+            <button onclick="updateRes('${r.reservation_id}','completed')" class="btn btn-sm" style="background:#10b981;color:#fff;padding:4px 10px;font-size:11px">Complete</button>
+            <button onclick="updateRes('${r.reservation_id}','no_show')" class="btn btn-sm btn-secondary" style="padding:4px 10px;font-size:11px">No Show</button>
+          `:''}
+        </div>
+      </td>
+    </tr>`).join('');
+}
+
+async function updateRes(id,status){
+  try{
+    await api.patch(`/admin/reservations/${id}`,{status});
+    toast.success(`Reservation ${status}`);
+    loadReservations();
+  }catch(err){toast.error(err.message);}
+}
+
+function renderPagination(p){
+  const el=document.getElementById('pagination');
+  if(!p||p.pages<=1){el.innerHTML='';return;}
+  el.innerHTML=`<div style="display:flex;gap:8px;justify-content:center;margin-top:24px">
+    <button class="btn btn-secondary btn-sm" onclick="changePage(${currentPage-1})" ${currentPage<=1?'disabled':''}>← Prev</button>
+    <span style="padding:6px 12px;font-size:13px;color:var(--text-secondary)">Page ${p.page} of ${p.pages}</span>
+    <button class="btn btn-secondary btn-sm" onclick="changePage(${currentPage+1})" ${currentPage>=p.pages?'disabled':''}>Next →</button>
+  </div>`;
+}
+function changePage(p){currentPage=p;loadReservations();}
+</script>
+</body>
+</html>
