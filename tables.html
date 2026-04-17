@@ -130,7 +130,11 @@ function openTableModal(id=null){
   document.getElementById('tableModalTitle').textContent=id?'Edit Table':'Add Table';
   document.getElementById('deleteTableBtn').style.display=id?'block':'none';
   document.getElementById('statusGroup').style.display=id?'block':'none';
-  if(!id){ document.getElementById('tableNumber').value=''; document.getElementById('tableCapacity').value=4; document.getElementById('tableLocation').value=''; }
+  if(!id){
+    document.getElementById('tableNumber').value='';
+    document.getElementById('tableCapacity').value='4';
+    document.getElementById('tableLocation').value='';
+  }
   else{
     const t=tables.find(t=>t.table_id===id); if(!t) return;
     document.getElementById('tableNumber').value=t.table_number;
