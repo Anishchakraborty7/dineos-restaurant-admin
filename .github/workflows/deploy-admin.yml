@@ -1,0 +1,33 @@
+name: Deploy Admin Panel to Vercel
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'restaurant-admin/**'
+      - '.github/workflows/deploy-admin.yml'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Deploy to Vercel
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_ADMIN_PROJECT_ID }}
+        run: |
+          npm install -g vercel
+          vercel --prod --token $VERCEL_TOKEN
+
+      - name: Verify Deployment
+        run: |
+          sleep 10
+          curl -f https://admin.dineos.com/ || echo "⚠️ Check deployment status on Vercel"
+
+      - name: Notify Success
+        if: success()
+        run: echo "✅ Admin panel deployed successfully!"

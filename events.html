@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Events & Open Mic — DineOS Restaurant</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="app-layout">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-brand">
+        <div class="brand-icon">🍽️</div>
+        <div class="brand-name" id="sidebarRestaurantName">Restaurant</div>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Manage</div>
+      <a href="dashboard.html"     class="nav-item"><span class="nav-icon">📊</span> Dashboard</a>
+      <a href="orders.html"        class="nav-item"><span class="nav-icon">📦</span> Orders</a>
+      <a href="menu.html"          class="nav-item"><span class="nav-icon">📋</span> Menu</a>
+      <a href="reservations.html"  class="nav-item"><span class="nav-icon">📅</span> Reservations</a>
+      <a href="tables.html"        class="nav-item"><span class="nav-icon">🪑</span> Tables</a>
+      <a href="customers.html"     class="nav-item"><span class="nav-icon">👥</span> Customers</a>
+      <a href="events.html"        class="nav-item active"><span class="nav-icon">🎤</span> Events & Open Mic</a>
+      <div class="nav-section-label" style="margin-top:8px">Account</div>
+      <a href="settings.html"      class="nav-item"><span class="nav-icon">⚙️</span> Settings</a>
+      <a href="#" class="nav-item" id="logoutBtn"><span class="nav-icon">🚪</span> Sign Out</a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="user-avatar" id="sidebarAvatar">R</div>
+        <div>
+          <div class="user-name" id="sidebarName">Admin</div>
+          <div class="user-role">Restaurant Admin</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main-content">
+    <header class="main-header">
+      <div class="header-title">
+        <h1>Events & Open Mic</h1>
+        <p style="font-size:13px;color:var(--text-muted)">Manage live shows, events and signups</p>
+      </div>
+      <div class="header-actions">
+        <button class="btn btn-primary btn-sm" onclick="showCreateModal()">+ Create Event</button>
+      </div>
+    </header>
+
+    <main class="page-content animate-fadeInUp">
+      <!-- Events List -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Upcoming Events</div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Date & Time</th>
+                <th>Title</th>
+                <th>Type</th>
+                <th>Cover Charge</th>
+                <th>Registrations</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="eventsListBody">
+              <tr><td colspan="7" style="text-align:center;padding:20px">Loading...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      
+      <!-- Registrations Modal -->
+      <div class="modal-overlay" id="regsModal">
+        <div class="modal" style="max-width:800px">
+          <div class="modal-header">
+            <div>
+              <div class="modal-title">Event Registrations</div>
+              <div class="modal-subtitle" id="regsSubtitle">Loading...</div>
+            </div>
+            <button class="btn btn-ghost" onclick="closeRegsModal()">X</button>
+          </div>
+          <div class="modal-body table-wrap" style="padding:0">
+            <table>
+               <thead><tr><th>Name</th><th>Role</th><th>Detail</th><th>Status</th><th>Action</th></tr></thead>
+               <tbody id="regsBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Create Modal -->
+      <div class="modal-overlay" id="createEventModal">
+        <div class="modal">
+          <div class="modal-header">
+            <div class="modal-title">Create New Event</div>
+          </div>
+          <div class="modal-body">
+            <div class="form-group">
+              <label>Title</label>
+              <input type="text" id="evTitle" placeholder="Friday Night Open Mic">
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Date</label>
+                <input type="date" id="evDate">
+              </div>
+              <div class="form-group">
+                <label>Start Time</label>
+                <input type="time" id="evTime">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Type</label>
+                <select id="evType">
+                  <option value="open_mic">Open Mic</option>
+                  <option value="live_music">Live Music</option>
+                  <option value="comedy">Comedy</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Cover Charge (₹)</label>
+                <input type="number" id="evCover" value="0">
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-ghost" onclick="closeCreateModal()">Cancel</button>
+            <button class="btn btn-primary" onclick="submitEvent()">Create Event</button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Upgrade Feature Locked Banner -->
+      <div id="featureLocked" style="display:none; text-align:center; margin-top:50px">
+         <h2>🔒 Feature Locked</h2>
+         <p>Events and Open Mic are available on Pro and Enterprise plans.</p>
+         <button class="btn btn-primary mt-4">Upgrade Plan</button>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script src="js/config.js"></script>
+<script src="js/events.js"></script>
+</body>
+</html>
